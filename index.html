@@ -163,6 +163,75 @@ footer{max-width:1500px;margin:0 auto;padding:8px 24px 40px;color:var(--muted);f
   .grid{grid-template-columns:1fr} .hero h1{font-size:34px} .stats{grid-template-columns:1fr}
   nav.tabs button{padding:8px 6px;font-size:12.5px} header{gap:8px;padding:0 12px} .net{display:none} .logo{height:24px} header .btn{padding:0 12px;font-size:13px;height:38px} nav.tabs{gap:0}
 }
+
+/* ===== motion & polish ===== */
+.hero{isolation:isolate}
+.hero .orb{position:absolute;border-radius:50%;filter:blur(46px);opacity:.55;z-index:-1;pointer-events:none;will-change:transform}
+.hero .o1{width:240px;height:240px;right:8%;top:-70px;background:#7c3aed;animation:float1 9s ease-in-out infinite}
+.hero .o2{width:200px;height:200px;right:34%;bottom:-90px;background:#2563eb;opacity:.35;animation:float2 11s ease-in-out infinite}
+.hero .o3{width:140px;height:140px;left:-40px;top:30%;background:#c026d3;opacity:.25;animation:float1 13s ease-in-out infinite reverse}
+@keyframes float1{0%,100%{transform:translate(calc(var(--mx,0)*18px),calc(var(--my,0)*12px))}50%{transform:translate(calc(var(--mx,0)*18px + 22px),calc(var(--my,0)*12px - 26px))}}
+@keyframes float2{0%,100%{transform:translate(calc(var(--mx,0)*-14px),0)}50%{transform:translate(calc(var(--mx,0)*-14px - 30px),-20px)}}
+.hero h1 .rot{display:inline-block;transition:opacity .35s,transform .35s;background:linear-gradient(90deg,#a78bfa,#f0abfc,#93c5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1 .rot.out{opacity:0;transform:translateY(10px)}
+.hero .live{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#c4b0ff;background:rgba(124,58,237,.18);border:1px solid rgba(139,92,246,.4);padding:5px 12px;border-radius:999px;margin-bottom:16px}
+.pulse{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 0 0 rgba(52,211,153,.7);animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.hero svg.swoosh path.line{stroke-dasharray:1400;stroke-dashoffset:1400;animation:draw 2.4s .2s ease-out forwards}
+.hero.seen svg.swoosh path.line{animation:none;stroke-dashoffset:0}
+@keyframes draw{to{stroke-dashoffset:0}}
+.hero svg.swoosh circle.tip{animation:tip 1.8s infinite}
+@keyframes tip{0%,100%{r:6;opacity:1}50%{r:11;opacity:.35}}
+.hero .cta .btn.primary{position:relative;overflow:hidden;animation:glow 2.6s ease-in-out infinite}
+.hero .cta .btn.primary::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:shine 3.6s infinite}
+@keyframes shine{0%,60%{left:-60%}100%{left:130%}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.0)}50%{box-shadow:0 0 26px 2px rgba(124,58,237,.65)}}
+.hstats{display:flex;gap:28px;margin-top:26px;position:relative;z-index:1;flex-wrap:wrap}
+.hstats div small{display:block;color:#a9a9c8;font-size:12px;text-transform:uppercase;letter-spacing:.07em}
+.hstats div b{font-size:24px;font-weight:800}
+.hot{display:flex;align-items:center;gap:14px;margin-top:22px;padding:12px 14px;border-radius:14px;background:rgba(13,13,31,.55);border:1px solid rgba(139,92,246,.35);backdrop-filter:blur(6px);position:relative;z-index:1;max-width:560px;cursor:pointer;transition:.15s}
+.hot:hover{border-color:var(--purple);transform:translateY(-1px)}
+.hot .hq{flex:1;min-width:0;font-weight:700;font-size:14px;overflow-wrap:anywhere}
+.hot .hq small{display:block;color:#fb923c;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.hot .mini{display:flex;height:6px;border-radius:99px;overflow:hidden;margin-top:8px;background:var(--surface2)}
+.hot .mini i:first-child{background:linear-gradient(90deg,#10b981,#34d399)} .hot .mini i:last-child{background:#f43f5e}
+.hot .go{font-weight:800;color:#c4b0ff;white-space:nowrap}
+.ticker{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:10px 0;mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.ticker .track{display:inline-flex;gap:38px;white-space:nowrap;animation:scroll 38s linear infinite;padding-left:38px}
+.ticker:hover .track{animation-play-state:paused}
+.ticker span.ev{font-size:13.5px;color:#cfcfe6}
+.ticker span.ev b.y{color:var(--yes)} .ticker span.ev b.n{color:var(--no)}
+@keyframes scroll{to{transform:translateX(-50%)}}
+.mcard{position:relative;overflow:hidden}
+.mcard.enter{animation:rise .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.mcard::before{content:"";position:absolute;inset:0;background:radial-gradient(260px 120px at var(--cx,50%) -20%,rgba(139,92,246,.22),transparent);opacity:0;transition:.2s;pointer-events:none}
+.mcard:hover::before{opacity:1}
+.mcard:hover{box-shadow:0 14px 40px rgba(76,29,149,.35)}
+.oddsbar{display:flex;height:6px;border-radius:99px;overflow:hidden;background:var(--surface2)}
+.oddsbar i{display:block;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.oddsbar i.y{background:linear-gradient(90deg,#10b981,#34d399)} .oddsbar i.n{background:linear-gradient(90deg,#fb4f86,#f43f5e)}
+.side-btn:active,.btn:active{transform:scale(.97)}
+.hotbadge{background:rgba(251,146,60,.16);color:#fb923c}
+.hotbadge::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#fb923c;margin-right:6px;animation:pulse 1.8s infinite}
+/* settled / past */
+.mcard.done{background:linear-gradient(180deg,rgba(255,255,255,.015),rgba(255,255,255,0)),var(--surface);border-style:dashed}
+.mcard.done .mico{filter:grayscale(.7);opacity:.75}
+.mcard.done .mq{color:#b9b9d6}
+.mcard .result{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;font-weight:700;font-size:13.5px}
+.mcard .result.yes{background:var(--yes-bg);color:var(--yes)} .mcard .result.no{background:var(--no-bg);color:var(--no)}
+.mcard .result.mine-won{box-shadow:inset 0 0 0 1px var(--yes-line)}
+tr.past td{opacity:.55} tr.past td:last-child,tr.past td:nth-child(2){opacity:.9}
+tr.past .addr{opacity:.8}
+.seg{display:inline-flex;background:var(--surface2);border-radius:999px;padding:3px;gap:2px;margin-bottom:12px}
+.seg button{padding:6px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--purple);color:#fff}
+.chipres{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700}
+.chipres.w{background:var(--yes-bg);color:var(--yes)} .chipres.l{background:var(--no-bg);color:var(--no)} .chipres.s{background:var(--purple-soft);color:#c4b0ff}
+tr.newrow{animation:flash 2.4s ease-out}
+@keyframes flash{0%{background:rgba(139,92,246,.35)}100%{background:transparent}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.hero svg.swoosh path.line{stroke-dashoffset:0}}
+@media (max-width:700px){.hstats{gap:18px}.hstats div b{font-size:20px}.hot{flex-wrap:wrap}}
 </style>
 </head>
 <body>
@@ -257,7 +326,7 @@ const S = {
   markets: [], activity: [], feesOwed: 0n,
   account: null, chainOk: false, balance: null,
   reader: null, readContract: null, browserProvider: null, signer: null, writeContract: null,
-  modalId: null, activityError: null, side: true, amount: "0.002", loading: true, loadError: null
+  modalId: null, activityError: null, actMap: new Map(), actScanned: null, actBusy: null, actFilter: 'all', rpcIdx: 0, sig: '', animated: false, shown: {}, side: true, amount: "0.002", loading: true, loadError: null
 };
 
 /* ============ HELPERS ============ */
@@ -295,19 +364,32 @@ function errMsg(e){
 }
 
 /* ============ CHAIN: READ ============ */
+function mkReader(i){
+  const url = CFG.rpcs[i % CFG.rpcs.length];
+  // batchMaxCount:1 -> one request per call, so a rate-limited batch can't surface as "could not coalesce error"
+  const p = new ethers.JsonRpcProvider(url, CFG.chainId, { staticNetwork: true, batchMaxCount: 1 });
+  S.rpcIdx = i % CFG.rpcs.length; S.reader = p; S.readContract = new ethers.Contract(CFG.address, ABI, p);
+  return p;
+}
 async function initReader(){
-  for (const url of CFG.rpcs){
-    try{
-      const p = new ethers.JsonRpcProvider(url, CFG.chainId, { staticNetwork: true });
-      await p.getBlockNumber();
-      S.reader = p; S.readContract = new ethers.Contract(CFG.address, ABI, p);
-      return;
-    }catch(e){ console.warn("RPC failed", url, e); }
+  for (let i = 0; i < CFG.rpcs.length; i++){
+    try{ const p = mkReader(i); await p.getBlockNumber(); return; }
+    catch(e){ console.warn("RPC failed", CFG.rpcs[i], e); }
   }
   throw new Error("Could not reach any Sepolia RPC endpoint.");
 }
+// run a read; on failure switch to the next RPC and retry with a short backoff
+async function robust(fn, tries = 5){
+  let last;
+  for (let a = 0; a < tries; a++){
+    try{ return await fn(); }
+    catch(e){ last = e; console.warn("read failed, switching RPC", e?.shortMessage || e?.message || e); mkReader((S.rpcIdx || 0) + 1); await sleep(400 * (a + 1)); }
+  }
+  throw last;
+}
 
-async function loadMarkets(){
+async function loadMarkets(){ return robust(loadMarketsOnce, 4); }
+async function loadMarketsOnce(){
   const c = S.readContract;
   const n = Number(await c.marketCount());
   const ids = Array.from({length:n}, (_,i) => i);
@@ -325,12 +407,12 @@ async function loadMarkets(){
 }
 
 // getLogs over a block range, split into chunks; halves a chunk if the RPC rejects it
-async function getLogsChunked(from, to, size){
-  const out = [];
+async function getLogsChunked(from, to, size, out){
+  let splits = 0;
   async function range(a, b){
-    try { out.push(...await S.reader.getLogs({ address: CFG.address, fromBlock: a, toBlock: b })); }
+    try { out.push(...await robust(() => S.reader.getLogs({ address: CFG.address, fromBlock: a, toBlock: b }), 2)); }
     catch(e){
-      if (b - a < 200) throw e;
+      if (b - a < 200 || ++splits > 4) throw e;
       const mid = Math.floor((a + b) / 2);
       await range(a, mid); await range(mid + 1, b);
     }
@@ -338,35 +420,71 @@ async function getLogsChunked(from, to, size){
   for (let a = from; a <= to; a += size) await range(a, Math.min(a + size - 1, to));
   return out;
 }
-
-async function loadActivity(){
+const ACT_KEY = "polybet_act_v2_" + CFG.address.toLowerCase();
+function actLoadCache(){
   try{
-    const latest = await S.reader.getBlockNumber();
-    const from = Math.max(0, Math.min(CFG.deployBlock, latest));
-    const logs = await getLogsChunked(from, latest, 4000);
-    const iface = new ethers.Interface(ABI);
-    const rows = [];
-    for (const l of logs){
-      let ev; try { ev = iface.parseLog(l); } catch(e){ continue; }
-      const base = { block: l.blockNumber, idx: l.index, tx: l.transactionHash, id: Number(ev.args.id) };
-      if (ev.name === "MarketCreated") rows.push({ ...base, t: "created", who: ev.args.creator });
-      else if (ev.name === "BetPlaced") rows.push({ ...base, t: ev.args.yes ? "bet-yes" : "bet-no", who: ev.args.bettor, amt: ev.args.amount });
-      else if (ev.name === "MarketResolved") rows.push({ ...base, t: ev.args.yesWins ? "res-yes" : "res-no" });
-      else if (ev.name === "WinningsClaimed") rows.push({ ...base, t: "claim", who: ev.args.bettor, amt: ev.args.amount });
-    }
-    rows.sort((x, y) => y.block - x.block || y.idx - x.idx);
-    S.activity = rows; S.activityError = null;
-  }catch(e){ console.warn("activity", e); S.activity = []; S.activityError = errMsg(e); }
+    const c = JSON.parse(localStorage.getItem(ACT_KEY) || "null");
+    if (c && c.rows){ S.actScanned = c.scanned; for (const r of c.rows){ if (r.amt != null) r.amt = BigInt(r.amt); S.actMap.set(r.tx + ":" + r.idx, r); } }
+  }catch(e){}
+}
+function actSaveCache(){
+  try{ localStorage.setItem(ACT_KEY, JSON.stringify({ scanned: S.actScanned, rows: [...S.actMap.values()].map(r => ({ ...r, amt: r.amt != null ? r.amt.toString() : null })) })); }catch(e){}
+}
+function actPublish(){
+  S.activity = [...S.actMap.values()].sort((x, y) => y.block - x.block || y.idx - x.idx);
 }
 
-async function refresh(withActivity=false){
+// incremental: only scans blocks we haven't seen; never wipes data we already have
+async function loadActivity(){
+  if (S.actBusy) return S.actBusy;
+  S.actBusy = (async () => {
+    try{
+      const latest = await robust(() => S.reader.getBlockNumber());
+      const first = Math.max(0, Math.min(CFG.deployBlock, latest));
+      const from = S.actScanned != null && !params.get("from") ? Math.max(first, S.actScanned - 3) : first;
+      const logs = [];
+      await getLogsChunked(from, latest, 4000, logs);
+      const iface = new ethers.Interface(ABI);
+      for (const l of logs){
+        let ev; try { ev = iface.parseLog(l); } catch(e){ continue; }
+        const base = { block: l.blockNumber, idx: l.index, tx: l.transactionHash, id: Number(ev.args.id) };
+        let row = null;
+        if (ev.name === "MarketCreated") row = { ...base, t: "created", who: ev.args.creator };
+        else if (ev.name === "BetPlaced") row = { ...base, t: ev.args.yes ? "bet-yes" : "bet-no", who: ev.args.bettor, amt: ev.args.amount };
+        else if (ev.name === "MarketResolved") row = { ...base, t: ev.args.yesWins ? "res-yes" : "res-no" };
+        else if (ev.name === "WinningsClaimed") row = { ...base, t: "claim", who: ev.args.bettor, amt: ev.args.amount };
+        if (row) S.actMap.set(row.tx + ":" + row.idx, row);
+      }
+      S.actScanned = latest; S.activityError = null;
+      actPublish(); actSaveCache();
+    }catch(e){
+      console.warn("activity", e);
+      // keep whatever we already show; only surface an error if there is nothing to show
+      S.activityError = S.activity.length ? null : errMsg(e);
+    }finally{ S.actBusy = null; }
+  })();
+  return S.actBusy;
+}
+
+function dataSig(){
+  return [S.account, S.chainOk, S.balance, S.feesOwed, S.activity.length, S.activityError, S.loading, S.loadError,
+    S.markets.map(m => [m.id, m.yesPool, m.noPool, m.resolved, m.yesWins, m.myYes, m.myNo, m.claimed].join(",")).join("|")].join("#");
+}
+async function refresh(withActivity=false, background=false){
   try{
     await loadMarkets();
     if (withActivity || S.tab === "activity") await loadActivity();
     S.loadError = null;
-  }catch(e){ console.error(e); S.loadError = errMsg(e); }
+  }catch(e){
+    console.error(e);
+    // a failed background poll must not blank a page that already has data
+    S.loadError = S.markets.length ? null : errMsg(e);
+  }
   S.loading = false;
   await refreshBalance();
+  const sg = dataSig();
+  if (background && sg === S.sig) return;
+  S.sig = sg;
   render();
 }
 async function refreshSoon(){ for (const d of [1500, 4500, 9000]){ await sleep(d); await refresh(true); } }
@@ -520,18 +638,29 @@ function filtered(){
     }
   });
 }
-function marketCard(m){
+function marketCard(m, i = 0){
   const yp = pct(m, true), np = 100 - yp;
   const t = total(m);
-  return `<div class="mcard" data-open="${m.id}">
+  const hotId = (() => { const o = S.markets.filter(x => !x.resolved && total(x) > 0n).sort((a, b) => total(b) > total(a) ? 1 : -1)[0]; return o ? o.id : -1; })();
+  const mineSide = m.myYes > 0n || m.myNo > 0n;
+  let foot, sides;
+  if (m.resolved){
+    const cl = claimable(m);
+    const mineTxt = !mineSide ? "" : m.claimed ? " · you claimed" : cl > 0n ? " · you won 🎉" : " · you lost";
+    sides = `<div class="result ${m.yesWins ? "yes" : "no"} ${cl > 0n ? "mine-won" : ""}">✓ Settled · ${m.yesWins ? "YES" : "NO"} won${mineTxt}</div>`;
+    foot = `<span class="mono">${eth(t)} ETH was in the pool</span><span>Closed</span>`;
+  }else{
+    sides = `<div class="sides"><button class="side-btn yes" data-open="${m.id}" data-side="yes">Yes ${t === 0n ? "50%" : fmtPct(yp)}</button><button class="side-btn no" data-open="${m.id}" data-side="no">No ${t === 0n ? "50%" : fmtPct(np)}</button></div>`;
+    foot = `<span class="mono">${eth(t)} ETH in pool</span><span>${t === 0n ? "Be the first to bet" : "Pool share"}</span>`;
+  }
+  const first = !S.shown[m.id]; S.shown[m.id] = true;
+  return `<div class="mcard ${m.resolved ? "done" : ""} ${first && !S.animated ? "enter" : ""}" style="animation-delay:${Math.min(i, 8) * 70}ms" data-open="${m.id}">
     <div class="mtop"><div class="mico">${IC_CHART}</div>
       <div><div class="mq">${esc(m.question)}</div>
-      <div class="mmeta">${statusBadge(m)}<span>#${m.id}</span><span>by ${short(m.creator)}</span></div></div></div>
-    <div class="sides">
-      <button class="side-btn yes" data-open="${m.id}" data-side="yes">Yes ${t === 0n ? "50%" : fmtPct(yp)}</button>
-      <button class="side-btn no" data-open="${m.id}" data-side="no">No ${t === 0n ? "50%" : fmtPct(np)}</button>
-    </div>
-    <div class="mfoot"><span class="mono">${eth(t)} ETH in pool</span><span>${t === 0n ? "No bets yet" : "Pool share"}</span></div>
+      <div class="mmeta">${statusBadge(m)}${m.id === hotId ? '<span class="badge hotbadge">Hot</span>' : ""}<span>#${m.id}</span><span>by ${short(m.creator)}</span></div></div></div>
+    ${sides}
+    <div class="oddsbar"><i class="y" style="width:${t === 0n ? 50 : yp}%"></i><i class="n" style="width:${t === 0n ? 50 : np}%"></i></div>
+    <div class="mfoot">${foot}</div>
   </div>`;
 }
 
@@ -539,17 +668,34 @@ function renderMain(){
   const list = filtered();
   if (S.tab === "portfolio") return renderPortfolio();
   if (S.tab === "activity") return renderActivity();
-  const hero = `<section class="hero">
-    <h1>Trade the <em>future.</em></h1>
+  const nBets = S.activity.filter(r => r.t.startsWith("bet")).length;
+  const pooled = S.markets.reduce((x, m) => x + total(m), 0n);
+  const open = S.markets.filter(m => !m.resolved);
+  const hotM = [...open].sort((a, b) => total(b) > total(a) ? 1 : -1)[0];
+  const evText = r => { const who_ = r.who ? (TEAM[r.who.toLowerCase()] || short(r.who)) : "creator"; const mq = (S.markets.find(m => m.id === r.id) || {}).question || "#" + r.id;
+    const a_ = { created: `<b>${esc(who_)}</b> created a market`, "bet-yes": `<b>${esc(who_)}</b> bet <b class="y">YES</b> ${eth(r.amt||0n)} ETH`, "bet-no": `<b>${esc(who_)}</b> bet <b class="n">NO</b> ${eth(r.amt||0n)} ETH`, "res-yes": `market resolved <b class="y">YES</b>`, "res-no": `market resolved <b class="n">NO</b>`, claim: `<b>${esc(who_)}</b> claimed ${eth(r.amt||0n)} ETH` }[r.t];
+    return `<span class="ev">${a_} · ${esc(mq.length > 46 ? mq.slice(0, 46) + "…" : mq)}</span>`; };
+  const evs = S.activity.slice(0, 8).map(evText).join("");
+  const ticker = evs ? `<div class="ticker"><div class="track">${evs}${evs}</div></div>` : "";
+  const hero = `<section class="hero ${S.animated ? "seen" : ""}" id="hero">
+    <i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i>
+    <span class="live"><i class="pulse"></i>Live on Sepolia</span>
+    <h1>Trade the <em><span class="rot" id="rot">future.</span></em></h1>
     <p>Prediction markets on campus life, tech and more. Bet YES or NO from your wallet, settled by smart contract on Ethereum.</p>
-    <div class="cta"><button class="btn primary" data-act="scroll">Explore Markets</button><button class="btn ghost" data-act="how">How It Works</button></div>
-    <svg class="swoosh" viewBox="0 0 600 260" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#7c3aed" stop-opacity="0"/><stop offset=".5" stop-color="#8b5cf6"/><stop offset="1" stop-color="#c4b5fd"/></linearGradient><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c3aed" stop-opacity=".45"/><stop offset="1" stop-color="#7c3aed" stop-opacity="0"/></linearGradient></defs><path d="M0 230 C80 220 120 160 190 175 S300 215 360 140 S470 90 520 40 L600 10 L600 260 L0 260Z" fill="url(#g2)"/><path d="M0 230 C80 220 120 160 190 175 S300 215 360 140 S470 90 520 40 L600 10" fill="none" stroke="url(#g1)" stroke-width="4" stroke-linecap="round"/></svg>
-  </section>`;
+    <div class="cta"><button class="btn primary" data-act="${S.account ? "create" : "connect"}">${S.account ? "+ Create a market" : "Connect &amp; start betting"}</button><button class="btn ghost" data-act="scroll">Explore Markets</button><button class="btn ghost" data-act="how">How It Works</button></div>
+    <div class="hstats">
+      <div><small>Markets</small><b class="mono" data-count="${S.markets.length}" data-key="m">${S.markets.length}</b></div>
+      <div><small>Total pooled (ETH)</small><b class="mono" data-count="${Number(ethers.formatEther(pooled))}" data-dec="4" data-key="p">${eth(pooled, 4)}</b></div>
+      <div><small>Bets placed</small><b class="mono" data-count="${nBets}" data-key="b">${nBets}</b></div>
+    </div>
+    ${hotM ? `<div class="hot" data-open="${hotM.id}"><div class="hq"><small>Hot market</small>${esc(hotM.question)}<div class="mini"><i style="width:${pct(hotM, true)}%"></i><i style="width:${100 - pct(hotM, true)}%"></i></div></div><div class="go">Bet now →</div></div>` : ""}
+    <svg class="swoosh" viewBox="0 0 600 260" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#7c3aed" stop-opacity="0"/><stop offset=".5" stop-color="#8b5cf6"/><stop offset="1" stop-color="#c4b5fd"/></linearGradient><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c3aed" stop-opacity=".45"/><stop offset="1" stop-color="#7c3aed" stop-opacity="0"/></linearGradient></defs><path d="M0 230 C80 220 120 160 190 175 S300 215 360 140 S470 90 520 40 L600 10 L600 260 L0 260Z" fill="url(#g2)"/><path class="line" d="M0 230 C80 220 120 160 190 175 S300 215 360 140 S470 90 520 40 L600 10" fill="none" stroke="url(#g1)" stroke-width="4" stroke-linecap="round"/><circle class="tip" cx="598" cy="10" r="6" fill="#c4b5fd"/></svg>
+  </section>${ticker}`;
   let body;
   if (S.loading) body = '<div class="empty"><span class="spin"></span>Loading markets from Sepolia…</div>';
   else if (S.loadError) body = `<div class="empty">Could not load markets: ${esc(S.loadError)}<br><br><button class="btn ghost sm" data-act="retry">Retry</button></div>`;
   else if (!list.length) body = `<div class="empty">${S.markets.length ? "No markets match this filter." : "No markets yet. Create the first one."}</div>`;
-  else body = `<div class="grid">${list.map(marketCard).join("")}</div>`;
+  else body = `<div class="grid">${list.map((m, i) => marketCard(m, i)).join("")}</div>`;
   const titles = {all:"Featured Markets", open:"Open Markets", resolved:"Resolved Markets", mine:"My Markets", positions:"My Positions"};
   return `${hero}
     <div class="sectionhead" id="mkts"><h2>${titles[S.filter]}</h2><span class="hint">${S.markets.length} total on-chain</span></div>${body}`;
@@ -578,14 +724,24 @@ function renderActivity(){
   const label = r => ({
     created: "created market", "bet-yes": "bet YES", "bet-no": "bet NO", "res-yes": "market resolved YES", "res-no": "market resolved NO", claim: "claimed"
   })[r.t];
-  if (!S.activity.length) return `<div class="card"><h3>Activity</h3><div class="empty">${S.loading ? '<span class="spin"></span>Loading events…' : S.activityError ? "Could not load events: " + esc(S.activityError) + '<br><br><button class="btn ghost sm" data-act="reload-activity">Retry</button>' : "No events yet."}</div></div>`;
-  const nameOf = id => { const m = S.markets.find(x => x.id === id); return m ? esc(m.question) : "#" + id; };
-  return `<div class="card"><h3>Recent activity</h3><div class="tablewrap"><table>
+  if (!S.activity.length) return `<div class="card"><h3>Activity</h3><div class="empty">${S.loading || S.actBusy ? '<span class="spin"></span>Loading events…' : S.activityError ? "Could not load events: " + esc(S.activityError) + '<br><br><button class="btn ghost sm" data-act="reload-activity">Retry</button>' : "No events yet."}</div></div>`;
+  const mk = id => S.markets.find(x => x.id === id);
+  const nameOf = id => { const m = mk(id); return m ? esc(m.question) : "#" + id; };
+  const isPast = r => { const m = mk(r.id); return !!(m && m.resolved); };
+  const rowsAll = S.activity;
+  const rows = rowsAll.filter(r => S.actFilter === "all" || (S.actFilter === "live" ? !isPast(r) : isPast(r))).slice(0, 80);
+  const outcome = r => {
+    if (!isPast(r) || !r.t.startsWith("bet")) return isPast(r) ? '<span class="chipres s">settled</span>' : "";
+    const m = mk(r.id); const won = m.yesWins === (r.t === "bet-yes");
+    return won ? '<span class="chipres w">✓ won side</span>' : '<span class="chipres l">✗ lost side</span>';
+  };
+  const seg = `<div class="seg">${[["all", "All"], ["live", "Live markets"], ["past", "Settled"]].map(([k, v]) => `<button data-actf="${k}" class="${S.actFilter === k ? "on" : ""}">${v}</button>`).join("")}</div>`;
+  return `<div class="card"><h3>Recent activity</h3>${seg}<div class="tablewrap"><table>
     <thead><tr><th>Who</th><th>Action</th><th>Amount</th><th>Market</th><th>Tx</th></tr></thead><tbody>
-    ${S.activity.slice(0, 60).map(r => `<tr><td class="addr">${r.who ? (same(r.who, S.account) ? "You (" + (TEAM[r.who.toLowerCase()] || short(r.who)) + ")" : who(r.who)) : "creator"}</td>
-      <td><span class="badge ${r.t.endsWith("yes") ? "yes" : r.t.endsWith("no") ? "no" : "open"}">${label(r)}</span></td>
+    ${rows.map(r => `<tr class="${isPast(r) ? "past" : ""} ${S.seenAct && !S.seenAct.has(r.tx + ":" + r.idx) ? "newrow" : ""}"><td class="addr">${r.who ? (same(r.who, S.account) ? "You (" + (TEAM[r.who.toLowerCase()] || short(r.who)) + ")" : who(r.who)) : "creator"}</td>
+      <td><span class="badge ${r.t.endsWith("yes") ? "yes" : r.t.endsWith("no") ? "no" : "open"}">${label(r)}</span>${outcome(r)}</td>
       <td class="mono">${r.amt ? eth(r.amt) + " ETH" : ""}</td><td style="max-width:260px;overflow-wrap:anywhere">${nameOf(r.id)}</td>
-      <td><a target="_blank" rel="noopener" href="${CFG.explorer}/tx/${r.tx}">${short(r.tx)}</a></td></tr>`).join("")}
+      <td><a target="_blank" rel="noopener" href="${CFG.explorer}/tx/${r.tx}">${short(r.tx)}</a></td></tr>`).join("") || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">Nothing here yet.</td></tr>'}
     </tbody></table></div></div>`;
 }
 
@@ -631,7 +787,26 @@ function render(){
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === S.tab));
   document.querySelectorAll(".side .item").forEach(b => b.classList.toggle("on", S.tab === "markets" && b.dataset.filter === S.filter));
   if (S.modalId != null) renderModal();
+  afterRender();
 }
+function afterRender(){
+  // count-up numbers (from the last shown value)
+  document.querySelectorAll("[data-count]").forEach(el => {
+    const to = Number(el.dataset.count), dec = Number(el.dataset.dec || 0), key = el.dataset.key;
+    const from = S.counts && S.counts[key] != null ? S.counts[key] : 0;
+    (S.counts = S.counts || {})[key] = to;
+    if (from === to || matchMedia("(prefers-reduced-motion: reduce)").matches){ el.textContent = to.toFixed(dec); return; }
+    const t0 = performance.now(), dur = 900;
+    (function step(t){ const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = (from + (to - from) * e).toFixed(dec); if (k < 1) requestAnimationFrame(step); })(t0);
+  });
+  S.animated = true;
+  if (S.tab === "activity"){ S.seenAct = new Set(S.activity.map(r => r.tx + ":" + r.idx)); }
+}
+const WORDS = ["future.", "outcome.", "odds.", "campus.", "next big thing."];
+let wi = 0;
+setInterval(() => { const el = document.getElementById("rot"); if (!el || document.hidden) return; el.classList.add("out"); setTimeout(() => { wi = (wi + 1) % WORDS.length; el.textContent = WORDS[wi]; el.classList.remove("out"); }, 350); }, 2600);
+document.addEventListener("pointermove", e => { const h = document.getElementById("hero"); if (!h) return; const r = h.getBoundingClientRect(); h.style.setProperty("--mx", ((e.clientX - r.left) / r.width - .5).toFixed(2)); h.style.setProperty("--my", ((e.clientY - r.top) / r.height - .5).toFixed(2)); });
+document.addEventListener("pointermove", e => { const c = e.target.closest && e.target.closest(".mcard"); if (c){ const r = c.getBoundingClientRect(); c.style.setProperty("--cx", (e.clientX - r.left) + "px"); } });
 
 /* ============ MODALS ============ */
 function openModal(html){ $("#modal").innerHTML = html; $("#overlay").classList.add("show"); }
@@ -753,6 +928,7 @@ document.addEventListener("click", e => {
   if (q("[data-create]")) return doCreate($("#newq").value);
   if ((el = q("[data-open]"))){ return openMarket(Number(el.dataset.open), el.dataset.side); }
   if ((el = q("[data-tab]"))){ S.tab = el.dataset.tab; if (S.tab === "activity") loadActivity().then(render); return render(); }
+  if ((el = q("[data-actf]"))){ S.actFilter = el.dataset.actf; return render(); }
   if ((el = q("[data-tab-go]"))){ S.tab = el.dataset.tabGo; return render(); }
   if ((el = q("[data-filter]"))){ S.tab = "markets"; S.filter = el.dataset.filter; return render(); }
   if ((el = q("[data-act]"))){
@@ -762,6 +938,7 @@ document.addEventListener("click", e => {
       case "how": return openHow();
       case "retry": S.loading = true; render(); return initReader().then(() => refresh(true)).catch(err => { S.loading = false; S.loadError = errMsg(err); render(); });
       case "reload-activity": return loadActivity().then(render);
+      case "create": return needWallet().then(ok => ok && openCreate());
       case "scroll": return $("#mkts")?.scrollIntoView({ behavior: "smooth" });
     }
   }
@@ -781,13 +958,14 @@ $("#newMarketBtn").addEventListener("click", async () => { if (await needWallet(
 /* ============ BOOT ============ */
 (async function boot(){
   $("#contractLink").href = `${CFG.explorer}/address/${CFG.address}`;
+  actLoadCache(); actPublish();
   render();
   try{
     await initReader();
     bindWalletEvents();
     await trySilentConnect();
     await refresh(true);
-    setInterval(() => { if (!document.hidden && !$("#overlay").classList.contains("show")) refresh(false); }, 20000);
+    setInterval(() => { if (!document.hidden && !$("#overlay").classList.contains("show")) refresh(S.tab === 'activity', true); }, 20000);
   }catch(e){ S.loading = false; S.loadError = errMsg(e); render(); }
 })();
 </script>
