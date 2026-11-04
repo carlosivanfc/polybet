@@ -218,13 +218,21 @@ const CFG = {
   rpcs: ["https://ethereum-sepolia-rpc.publicnode.com", "https://sepolia.drpc.org", "https://rpc.sepolia.org"],
   explorer: "https://sepolia.etherscan.io",
   faucet: "https://cloud.google.com/application/web3/faucet/ethereum/sepolia",
-  logLookbackBlocks: 60000,       // how far back the Activity tab looks for events
+  deployBlock: 12051203,          // block where Polybet was deployed (Activity starts here)
   feeBps: 300                     // 2% platform + 1% creator
 };
 const params = new URLSearchParams(location.search);
 if (params.get("contract")) CFG.address = params.get("contract");
 if (params.get("rpc")) CFG.rpcs = [params.get("rpc")];
+if (params.get("from")) CFG.deployBlock = Number(params.get("from"));
 
+const TEAM = {
+  "0x724710d85545f80b597b6cb53973bbf190ec2b0d": "Carlos",
+  "0x3475942bc48f5bc545fb422131b51acb926a0418": "Farah",
+  "0xa69b0f1a4b478d85c5800be9eb4d71bec45ccbd2": "Chelsie",
+  "0xa50f36d27edec94c49eedd2a932c3c9598a21813": "David",
+  "0xc1b73bd67a9af3547a95e6f9cfceba9752a33b4e": "Ginevra"
+};
 const ABI = [
   "function marketCount() view returns (uint256)",
   "function markets(uint256) view returns (string question,address creator,bool resolved,bool yesWins,uint256 yesPool,uint256 noPool,uint256 payoutPool)",
@@ -249,13 +257,14 @@ const S = {
   markets: [], activity: [], feesOwed: 0n,
   account: null, chainOk: false, balance: null,
   reader: null, readContract: null, browserProvider: null, signer: null, writeContract: null,
-  modalId: null, side: true, amount: "0.002", loading: true, loadError: null
+  modalId: null, activityError: null, side: true, amount: "0.002", loading: true, loadError: null
 };
 
 /* ============ HELPERS ============ */
 const $ = (s, r=document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const short = a => a ? a.slice(0,6) + "…" + a.slice(-4) : "";
+const who = a => { const n = a && TEAM[a.toLowerCase()]; return n ? `${n} · ${short(a)}` : short(a); };
 const eth = (wei, d=4) => {
   const v = Number(ethers.formatEther(wei));
   if (v === 0) return "0";
@@ -315,23 +324,39 @@ async function loadMarkets(){
   S.feesOwed = acct ? await c.feesOwed(acct) : 0n;
 }
 
+// getLogs over a block range, split into chunks; halves a chunk if the RPC rejects it
+async function getLogsChunked(from, to, size){
+  const out = [];
+  async function range(a, b){
+    try { out.push(...await S.reader.getLogs({ address: CFG.address, fromBlock: a, toBlock: b })); }
+    catch(e){
+      if (b - a < 200) throw e;
+      const mid = Math.floor((a + b) / 2);
+      await range(a, mid); await range(mid + 1, b);
+    }
+  }
+  for (let a = from; a <= to; a += size) await range(a, Math.min(a + size - 1, to));
+  return out;
+}
+
 async function loadActivity(){
   try{
-    const c = S.readContract;
     const latest = await S.reader.getBlockNumber();
-    let from = Math.max(0, latest - CFG.logLookbackBlocks);
-    const q = async (f, ev) => { try { return await c.queryFilter(ev, from, latest); } catch(e){ return []; } };
-    const [created, bets, resolved, claims] = await Promise.all([
-      q(from, c.filters.MarketCreated()), q(from, c.filters.BetPlaced()), q(from, c.filters.MarketResolved()), q(from, c.filters.WinningsClaimed())
-    ]);
+    const from = Math.max(0, Math.min(CFG.deployBlock, latest));
+    const logs = await getLogsChunked(from, latest, 4000);
+    const iface = new ethers.Interface(ABI);
     const rows = [];
-    created.forEach(l => rows.push({ t:"created", id:Number(l.args.id), who:l.args.creator, block:l.blockNumber, idx:l.index, tx:l.transactionHash }));
-    bets.forEach(l => rows.push({ t:l.args.yes?"bet-yes":"bet-no", id:Number(l.args.id), who:l.args.bettor, amt:l.args.amount, block:l.blockNumber, idx:l.index, tx:l.transactionHash }));
-    resolved.forEach(l => rows.push({ t:l.args.yesWins?"res-yes":"res-no", id:Number(l.args.id), block:l.blockNumber, idx:l.index, tx:l.transactionHash }));
-    claims.forEach(l => rows.push({ t:"claim", id:Number(l.args.id), who:l.args.bettor, amt:l.args.amount, block:l.blockNumber, idx:l.index, tx:l.transactionHash }));
-    rows.sort((a,b) => b.block - a.block || b.idx - a.idx);
-    S.activity = rows;
-  }catch(e){ console.warn("activity", e); S.activity = []; }
+    for (const l of logs){
+      let ev; try { ev = iface.parseLog(l); } catch(e){ continue; }
+      const base = { block: l.blockNumber, idx: l.index, tx: l.transactionHash, id: Number(ev.args.id) };
+      if (ev.name === "MarketCreated") rows.push({ ...base, t: "created", who: ev.args.creator });
+      else if (ev.name === "BetPlaced") rows.push({ ...base, t: ev.args.yes ? "bet-yes" : "bet-no", who: ev.args.bettor, amt: ev.args.amount });
+      else if (ev.name === "MarketResolved") rows.push({ ...base, t: ev.args.yesWins ? "res-yes" : "res-no" });
+      else if (ev.name === "WinningsClaimed") rows.push({ ...base, t: "claim", who: ev.args.bettor, amt: ev.args.amount });
+    }
+    rows.sort((x, y) => y.block - x.block || y.idx - x.idx);
+    S.activity = rows; S.activityError = null;
+  }catch(e){ console.warn("activity", e); S.activity = []; S.activityError = errMsg(e); }
 }
 
 async function refresh(withActivity=false){
@@ -553,11 +578,11 @@ function renderActivity(){
   const label = r => ({
     created: "created market", "bet-yes": "bet YES", "bet-no": "bet NO", "res-yes": "market resolved YES", "res-no": "market resolved NO", claim: "claimed"
   })[r.t];
-  if (!S.activity.length) return `<div class="card"><h3>Activity</h3><div class="empty">${S.loading ? '<span class="spin"></span>Loading events…' : "No recent events found."}</div></div>`;
+  if (!S.activity.length) return `<div class="card"><h3>Activity</h3><div class="empty">${S.loading ? '<span class="spin"></span>Loading events…' : S.activityError ? "Could not load events: " + esc(S.activityError) + '<br><br><button class="btn ghost sm" data-act="reload-activity">Retry</button>' : "No events yet."}</div></div>`;
   const nameOf = id => { const m = S.markets.find(x => x.id === id); return m ? esc(m.question) : "#" + id; };
   return `<div class="card"><h3>Recent activity</h3><div class="tablewrap"><table>
     <thead><tr><th>Who</th><th>Action</th><th>Amount</th><th>Market</th><th>Tx</th></tr></thead><tbody>
-    ${S.activity.slice(0, 60).map(r => `<tr><td class="addr">${r.who ? (same(r.who, S.account) ? "You" : short(r.who)) : "creator"}</td>
+    ${S.activity.slice(0, 60).map(r => `<tr><td class="addr">${r.who ? (same(r.who, S.account) ? "You (" + (TEAM[r.who.toLowerCase()] || short(r.who)) + ")" : who(r.who)) : "creator"}</td>
       <td><span class="badge ${r.t.endsWith("yes") ? "yes" : r.t.endsWith("no") ? "no" : "open"}">${label(r)}</span></td>
       <td class="mono">${r.amt ? eth(r.amt) + " ETH" : ""}</td><td style="max-width:260px;overflow-wrap:anywhere">${nameOf(r.id)}</td>
       <td><a target="_blank" rel="noopener" href="${CFG.explorer}/tx/${r.tx}">${short(r.tx)}</a></td></tr>`).join("")}
@@ -736,6 +761,7 @@ document.addEventListener("click", e => {
       case "withdraw": return doWithdraw();
       case "how": return openHow();
       case "retry": S.loading = true; render(); return initReader().then(() => refresh(true)).catch(err => { S.loading = false; S.loadError = errMsg(err); render(); });
+      case "reload-activity": return loadActivity().then(render);
       case "scroll": return $("#mkts")?.scrollIntoView({ behavior: "smooth" });
     }
   }
