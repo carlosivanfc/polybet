@@ -284,7 +284,7 @@ const CFG = {
   address: "0x5CFDd5b35F1FE9251D836848FFd01DabBea1B02D",   // Polybet contract on Sepolia
   chainId: 11155111,
   chainHex: "0xaa36a7",
-  rpcs: ["https://ethereum-sepolia-rpc.publicnode.com", "https://sepolia.drpc.org", "https://rpc.sepolia.org"],
+  rpcs: ["https://ethereum-sepolia-rpc.publicnode.com", "https://sepolia.drpc.org", "https://sepolia.gateway.tenderly.co", "https://1rpc.io/sepolia", "https://rpc.sepolia.org"],
   explorer: "https://sepolia.etherscan.io",
   faucet: "https://cloud.google.com/application/web3/faucet/ethereum/sepolia",
   deployBlock: 12051203,          // block where Polybet was deployed (Activity starts here)
@@ -365,10 +365,20 @@ function errMsg(e){
 
 /* ============ CHAIN: READ ============ */
 function mkReader(i){
-  const url = CFG.rpcs[i % CFG.rpcs.length];
-  // batchMaxCount:1 -> one request per call, so a rate-limited batch can't surface as "could not coalesce error"
-  const p = new ethers.JsonRpcProvider(url, CFG.chainId, { staticNetwork: true, batchMaxCount: 1 });
-  S.rpcIdx = i % CFG.rpcs.length; S.reader = p; S.readContract = new ethers.Contract(CFG.address, ABI, p);
+  // the connected wallet's own node (MetaMask/Infura) is the last fallback
+  const useWallet = !!(eth_() && S.account && !params.get("rpc"));
+  const n = CFG.rpcs.length + (useWallet ? 1 : 0);
+  i = ((i % n) + n) % n;
+  let p;
+  if (i < CFG.rpcs.length){
+    const fr = new ethers.FetchRequest(CFG.rpcs[i]);
+    fr.timeout = 9000;                    // never hang: fail fast and rotate
+    fr.retryFunc = async () => false;     // no hidden long 429 back-off
+    p = new ethers.JsonRpcProvider(fr, CFG.chainId, { staticNetwork: true, batchMaxCount: 1 });
+  }else{
+    p = new ethers.BrowserProvider(eth_(), CFG.chainId);
+  }
+  S.rpcIdx = i; S.reader = p; S.readContract = new ethers.Contract(CFG.address, ABI, p);
   return p;
 }
 async function initReader(){
@@ -407,10 +417,11 @@ async function loadMarketsOnce(){
 }
 
 // getLogs over a block range, split into chunks; halves a chunk if the RPC rejects it
-async function getLogsChunked(from, to, size, out){
+async function getLogsChunked(from, to, size, out, onChunk, deadline){
   let splits = 0;
   async function range(a, b){
-    try { out.push(...await robust(() => S.reader.getLogs({ address: CFG.address, fromBlock: a, toBlock: b }), 2)); }
+    if (deadline && Date.now() > deadline) throw new Error("Timed out reading events. Check your connection and press Retry.");
+    try { const res = await robust(() => S.reader.getLogs({ address: CFG.address, fromBlock: a, toBlock: b }), 4); out.push(...res); if (onChunk) onChunk(res); }
     catch(e){
       if (b - a < 200 || ++splits > 4) throw e;
       const mid = Math.floor((a + b) / 2);
@@ -435,35 +446,41 @@ function actPublish(){
 }
 
 // incremental: only scans blocks we haven't seen; never wipes data we already have
+function ingestLogs(logs){
+  const iface = new ethers.Interface(ABI);
+  for (const l of logs){
+    let ev; try { ev = iface.parseLog(l); } catch(e){ continue; }
+    const base = { block: l.blockNumber, idx: l.index, tx: l.transactionHash, id: Number(ev.args.id) };
+    let row = null;
+    if (ev.name === "MarketCreated") row = { ...base, t: "created", who: ev.args.creator };
+    else if (ev.name === "BetPlaced") row = { ...base, t: ev.args.yes ? "bet-yes" : "bet-no", who: ev.args.bettor, amt: ev.args.amount };
+    else if (ev.name === "MarketResolved") row = { ...base, t: ev.args.yesWins ? "res-yes" : "res-no" };
+    else if (ev.name === "WinningsClaimed") row = { ...base, t: "claim", who: ev.args.bettor, amt: ev.args.amount };
+    if (row) S.actMap.set(row.tx + ":" + row.idx, row);
+  }
+}
+// incremental + progressive: shows rows as soon as each block range arrives; never wipes data we already have
 async function loadActivity(){
   if (S.actBusy) return S.actBusy;
-  S.actBusy = (async () => {
+  const run = (async () => {
     try{
       const latest = await robust(() => S.reader.getBlockNumber());
       const first = Math.max(0, Math.min(CFG.deployBlock, latest));
       const from = S.actScanned != null && !params.get("from") ? Math.max(first, S.actScanned - 3) : first;
       const logs = [];
-      await getLogsChunked(from, latest, 4000, logs);
-      const iface = new ethers.Interface(ABI);
-      for (const l of logs){
-        let ev; try { ev = iface.parseLog(l); } catch(e){ continue; }
-        const base = { block: l.blockNumber, idx: l.index, tx: l.transactionHash, id: Number(ev.args.id) };
-        let row = null;
-        if (ev.name === "MarketCreated") row = { ...base, t: "created", who: ev.args.creator };
-        else if (ev.name === "BetPlaced") row = { ...base, t: ev.args.yes ? "bet-yes" : "bet-no", who: ev.args.bettor, amt: ev.args.amount };
-        else if (ev.name === "MarketResolved") row = { ...base, t: ev.args.yesWins ? "res-yes" : "res-no" };
-        else if (ev.name === "WinningsClaimed") row = { ...base, t: "claim", who: ev.args.bettor, amt: ev.args.amount };
-        if (row) S.actMap.set(row.tx + ":" + row.idx, row);
-      }
+      await getLogsChunked(from, latest, 5000, logs, res => {
+        ingestLogs(res); actPublish();
+        if (S.tab === "activity" && S.activity.length) render();
+      }, Date.now() + 60000);
       S.actScanned = latest; S.activityError = null;
       actPublish(); actSaveCache();
     }catch(e){
       console.warn("activity", e);
-      // keep whatever we already show; only surface an error if there is nothing to show
       S.activityError = S.activity.length ? null : errMsg(e);
-    }finally{ S.actBusy = null; }
+    }finally{ if (S.actBusy === run) S.actBusy = null; }
   })();
-  return S.actBusy;
+  S.actBusy = run;
+  return run;
 }
 
 function dataSig(){
@@ -489,7 +506,7 @@ async function refresh(withActivity=false, background=false){
 }
 async function refreshSoon(){ for (const d of [1500, 4500, 9000]){ await sleep(d); await refresh(true); } }
 async function refreshBalance(){
-  if (S.account && S.reader){ try { S.balance = await S.reader.getBalance(S.account); } catch(e){} } else S.balance = null;
+  if (S.account && S.reader){ try { S.balance = await robust(() => S.reader.getBalance(S.account), 3); } catch(e){} } else S.balance = null;
 }
 
 /* ============ WALLET ============ */
@@ -708,7 +725,7 @@ function renderPortfolio(){
   const outcome = m => {
     if (!m.resolved) return '<span class="badge pending">Pending</span>';
     const cl = claimable(m);
-    if (m.claimed) return '<span class="badge open">Claimed</span>';
+    if (m.claimed) return '<span class="badge yes">✓ Claimed · Won</span>';
     if (cl > 0n) return '<span class="badge yes">Won</span>';
     return '<span class="badge no">Lost</span>';
   };
@@ -724,7 +741,7 @@ function renderActivity(){
   const label = r => ({
     created: "created market", "bet-yes": "bet YES", "bet-no": "bet NO", "res-yes": "market resolved YES", "res-no": "market resolved NO", claim: "claimed"
   })[r.t];
-  if (!S.activity.length) return `<div class="card"><h3>Activity</h3><div class="empty">${S.loading || S.actBusy ? '<span class="spin"></span>Loading events…' : S.activityError ? "Could not load events: " + esc(S.activityError) + '<br><br><button class="btn ghost sm" data-act="reload-activity">Retry</button>' : "No events yet."}</div></div>`;
+  if (!S.activity.length) return `<div class="card"><h3>Activity</h3><div class="empty">${S.loading || S.actBusy ? '<span class="spin"></span>Loading events… <br><br><button class="btn ghost sm" data-act="reload-activity">Taking long? Retry</button>' : S.activityError ? "Could not load events: " + esc(S.activityError) + '<br><br><button class="btn ghost sm" data-act="reload-activity">Retry</button>' : "No events yet."}</div></div>`;
   const mk = id => S.markets.find(x => x.id === id);
   const nameOf = id => { const m = mk(id); return m ? esc(m.question) : "#" + id; };
   const isPast = r => { const m = mk(r.id); return !!(m && m.resolved); };
@@ -937,7 +954,7 @@ document.addEventListener("click", e => {
       case "withdraw": return doWithdraw();
       case "how": return openHow();
       case "retry": S.loading = true; render(); return initReader().then(() => refresh(true)).catch(err => { S.loading = false; S.loadError = errMsg(err); render(); });
-      case "reload-activity": return loadActivity().then(render);
+      case "reload-activity": S.actBusy = null; S.activityError = null; render(); return loadActivity().then(render);
       case "create": return needWallet().then(ok => ok && openCreate());
       case "scroll": return $("#mkts")?.scrollIntoView({ behavior: "smooth" });
     }
